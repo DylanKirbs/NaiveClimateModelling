@@ -1,0 +1,64 @@
+KOPPEN_DICT = {
+    "": 0,
+    "Af": 1,
+    "Am": 2,
+    "Aw": 3,
+    "As": 4,
+    "BWh": 5,
+    "BWk": 6,
+    "BSh": 7,
+    "BSk": 8,
+    "Csa": 9,
+    "Csb": 10,
+    "Csc": 11,
+    "Cwa": 12,
+    "Cwb": 13,
+    "Cwc": 14,
+    "Cfa": 15,
+    "Cfb": 16,
+    "Cfc": 17,
+    "Dsa": 18,
+    "Dsb": 19,
+    "Dsc": 20,
+    "Dsd": 21,
+    "Dwa": 22,
+    "Dwb": 23,
+    "Dwc": 24,
+    "Dwd": 25,
+    "Dfa": 26,
+    "Dfb": 27,
+    "Dfc": 28,
+    "Dfd": 29,
+    "ET": 30,
+    "EF": 31
+}
+
+# Make a plot of the predicted biomes from [0:10000] MAP and [-40:30] MAT
+# Create a meshgrid
+x = np.linspace(-40, 30, 100)
+y = np.linspace(0, 10000, 100)
+xx, yy = np.meshgrid(x, y)
+# Create a dataframe of the meshgrid
+mesh = pd.DataFrame({"MAT": xx.flatten(), "AP": yy.flatten()})
+# Classify the meshgrid
+mesh_classes = mesh.apply(lambda row: classify(
+    Observation(row["MAT"], row["AP"]), biomes).idxmax(), axis=1)
+
+# Reshape the classes to match the meshgrid
+mesh_classes = mesh_classes.values.reshape(xx.shape)
+mesh_classes = np.vectorize(KOPPEN_DICT.get)(mesh_classes)
+# Plot the meshgrid
+plt.contourf(xx, yy, mesh_classes, cmap="viridis")
+plt.xlabel("Mean Annual Temperature (C)")
+plt.ylabel("Annual Precipitation (mm)")
+plt.title("Predicted Biomes")
+
+# scatter plot of the biomes
+plt.scatter(biomes["MAT mean"], biomes["AP mean"], c="black", s=3)
+# Add the biome labels
+for i, txt in enumerate(biomes.index):
+    plt.annotate(txt, (biomes["MAT mean"][i],
+                 biomes["AP mean"][i]), fontsize=3)
+
+
+plt.savefig("./data/predicted_biomes.png", dpi=300)
